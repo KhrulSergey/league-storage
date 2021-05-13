@@ -1,0 +1,48 @@
+server:
+  port: 7702
+  error:
+    whitelabel:
+      enabled: true
+    include-stacktrace: never
+
+spring:
+  application:
+  name: Freeton League Core - the system for manage FreeTon League Game Tournaments
+  datasource: #JPA / HIBERNATE
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/league_storage
+    password: postgres
+    username: postgres
+  session:
+    token-name: X-Auth-Token
+
+freetonleague:
+  service:
+    league-storage:
+      service-token: EqUEcXc3#iZCu5hQS!l33O6I3
+
+
+#LOGGING CONFIG
+debug: false
+debug-rest: true
+stacktrace-rest: true
+
+logging:
+  level:
+    root: INFO
+    org:
+      apache:
+        kafka: ERROR
+        http:
+          wire: INFO
+      springframework: WARN #for detailed debug set DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+    com:
+      freetonleague: DEBUG
+  file:
+    name: \Users\Khsa\FreetonLeague\logs\League_Storage.log
