@@ -13,10 +13,14 @@ spring:
     url: jdbc:postgresql://localhost:5432/league_storage
     password: postgres
     username: postgres
-  session:
-    token-name: X-Auth-Token
+
 
 freetonleague:
+  service-user-prefix: SERVICE_
+  system-user-prefix: SYSTEM_
+  session:
+    header-token-name: X-Auth-Token
+    service-token-name: service_token #if change, than also change variable 'staticServiceTokenName'
   service:
     league-storage:
       service-token: EqUEcXc3#iZCu5hQS!l33O6I3

@@ -1,5 +1,6 @@
 package com.freetonleague.storage.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -20,27 +21,33 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 /**
  * Class for pre filtering request and search for token in header or JSESSIONID
  */
+@RequiredArgsConstructor
 public class AuthenticationCustomFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final String accessToken = "dfsdfsdfsdf";
-    private final String accessTokenAuthority = "ADMIN";
+    private final String serviceTokenName;
+
+    private final String serviceToken;
+
+    private final String serviceTokenAuthority;
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
 
-        String requestToken = request.getParameter("access_token");
+        String requestToken = request.getParameter(serviceTokenName);
 
         if (!isBlank(requestToken)) {
-            if (requestToken.equals(accessToken)) {
+            if (requestToken.equals(serviceToken)) {
                 UserDetails user = User.builder()
-                .authorities(accessTokenAuthority)
-                .accountLocked(false)
-                .accountExpired(false)
-                .credentialsExpired(false)
-                .disabled(false)
-                .roles(accessTokenAuthority)
-                .build();
+                        .username(serviceTokenName)
+                        .password(serviceToken)
+                        .authorities(serviceTokenAuthority)
+                        .accountLocked(false)
+                        .accountExpired(false)
+                        .credentialsExpired(false)
+                        .disabled(false)
+                        .roles(serviceTokenAuthority)
+                        .build();
                 this.setUserToContext(user);
             }
         }
