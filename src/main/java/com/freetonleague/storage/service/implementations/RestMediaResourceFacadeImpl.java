@@ -1,26 +1,24 @@
 package com.freetonleague.storage.service.implementations;
 
 import com.freetonleague.storage.domain.dto.MediaResourceDto;
+import com.freetonleague.storage.domain.enums.ResourceStatusType;
 import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.exception.ExceptionMessages;
 import com.freetonleague.storage.exception.MediaResourceManageException;
 import com.freetonleague.storage.mapper.MediaResourceMapper;
+import com.freetonleague.storage.security.permissions.CanManageResource;
 import com.freetonleague.storage.service.MediaResourceService;
 import com.freetonleague.storage.service.RestMediaResourceFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,7 +35,7 @@ public class RestMediaResourceFacadeImpl implements RestMediaResourceFacade {
     @Override
     public MediaResourceDto getMediaResourceByHashAndOwnerGUID(String hash, String ownerGUID) {
         MediaResource mediaResource = this.getVerifiedMediaResourceByHash(hash);
-        if (!mediaResource.getCreatorGUID().toString().equals(ownerGUID)){
+        if (!mediaResource.getCreatorGUID().toString().equals(ownerGUID)) {
             log.warn("~ Media resource with requested hash {} was not enabled for {}. 'getVerifiedMediaResourceByHash' in " +
                     "getMediaResourceByHashAndOwnerGUID request denied", hash, ownerGUID);
             throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_NOT_FOUND_ERROR,
@@ -54,26 +52,23 @@ public class RestMediaResourceFacadeImpl implements RestMediaResourceFacade {
         return mediaResourceMapper.toDto(this.getVerifiedMediaResourceByHash(hash));
     }
 
-//    /**
-//     * Add new docket to DB.
-//     */
-//    @CanManageDocket
-//    @Override
-//    public DocketDto addDocket(DocketDto docketDto) {
-//        docketDto.setId(null);
-//        docketDto.setStatus(DocketStatusType.CREATED);
-//
-//        Docket docket = this.getVerifiedDocketByDto(docketDto);
-//        docket = mediaResourceService.addDocket(docket);
-//
-//        if (isNull(docket)) {
-//            log.error("!> error while creating docket from dto {}.", docketDto);
-//            throw new DocketManageException(ExceptionMessages.DOCKET_CREATION_ERROR,
-//                    "Docket was not saved on Portal. Check requested params.");
-//        }
-//        return mediaResourceMapper.toDto(docket);
-//    }
-//
+    /**
+     * Add new resource to external service and DB.
+     */
+    @CanManageResource
+    @Override
+    public MediaResourceDto addResource(MediaResourceDto mediaResourceDto) {
+        mediaResourceDto.setStatus(ResourceStatusType.ACTIVE);
+        MediaResource mediaResource = this.getVerifiedMediaResourceByDto(mediaResourceDto);
+        mediaResource = mediaResourceService.add(mediaResource);
+
+        if (isNull(mediaResource)) {
+            log.error("!> error while creating media resource from dto {}.", mediaResourceDto);
+            throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_CREATION_ERROR,
+                    "Media resource was not saved on Portal. Check requested params.");
+        }
+        return mediaResourceMapper.toDto(mediaResource);
+    }
 
     /**
      * Getting media resource by hash and user with privacy check

@@ -19,19 +19,19 @@ public interface RestMediaResourceFacade {
     /**
      * Returns founded media resource by hash (for micro service)
      *
-     * @param hash      of media resource to search
+     * @param hash of media resource to search
      * @return media resource entity
      */
     MediaResourceDto getMediaResourceByHash(String hash);
 
-//    /**
-//     * Add new docket to DB.
-//     *
-//     * @param docketDto to be added
-//     * @return Added docket
-//     */
-//    DocketDto addDocket(DocketDto docketDto);
-//
+    /**
+     * Add new resource to external service and DB.
+     *
+     * @param mediaResource to be added
+     * @return Added media resource
+     */
+    MediaResourceDto addResource(MediaResourceDto mediaResource);
+
 //    /**
 //     * Edit docket in DB.
 //     *

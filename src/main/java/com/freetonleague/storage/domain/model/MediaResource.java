@@ -4,15 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.freetonleague.storage.domain.enums.ResourceFileType;
 import com.freetonleague.storage.domain.enums.ResourcePrivacyType;
 import com.freetonleague.storage.domain.enums.ResourceStatusType;
+import com.freetonleague.storage.util.StringUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import com.freetonleague.storage.util.StringUtil;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -35,11 +36,17 @@ public class MediaResource implements Serializable {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+    @Size(max = 200)
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private ResourceFileType resourceType;
 
-    /** Hash unique identifier of resource */
+    /**
+     * Hash unique identifier of resource
+     */
     @Column(name = "hash_key", nullable = false, updatable = false)
     private String hashKey;
 

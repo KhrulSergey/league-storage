@@ -1,4 +1,4 @@
-package com.freetonleague.storage.security.aspect;
+package com.freetonleague.storage.security.permissions;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyAuthority('ADMIN')")
+@PreAuthorize("hasAnyRole('EXTERNAL_SERVICE', 'ADMIN')")
 public @interface CanManageResource {
 }

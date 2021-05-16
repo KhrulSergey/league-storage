@@ -7,10 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = MediaResourceController.BASE_PATH)
@@ -22,12 +19,12 @@ public class MediaResourceController {
     public static final String PATH_GET_BY_HASH_AND_OWNER = "/by-hash-for-owner";
     public static final String PATH_GET_BY_HASH = "/by-hash";
     public static final String PATH_GET_BY_LEAGUE_ID = "/get-by-leagueId";
-    public static final String PATH_REGISTER = "/register";
+    public static final String PATH_CREATE = "/";
 
     /**
      * Parameter name for microservice data exchange
      */
-    private static final String ACCESS_TOKEN = "service_token";
+    private static final String staticServiceTokenName = "service_token";
 
     private final RestMediaResourceFacade restMediaResourceFacade;
 
@@ -40,8 +37,16 @@ public class MediaResourceController {
 
     @ApiOperation("Getting media resource by hash (for micro service)")
     @GetMapping(path = PATH_GET_BY_HASH)
-    public ResponseEntity<MediaResourceDto> getCurrent(@RequestParam(ACCESS_TOKEN) String accessToken,
+    public ResponseEntity<MediaResourceDto> getCurrent(@RequestParam(value = staticServiceTokenName, required = false) String serviceToken,
                                                        @RequestParam("hash") String hash) {
         return new ResponseEntity<>(restMediaResourceFacade.getMediaResourceByHash(hash), HttpStatus.OK);
+    }
+
+
+    @ApiOperation("Create and save new media resource on platform")
+    @PostMapping(path = PATH_CREATE)
+    public ResponseEntity<MediaResourceDto> createDocket(@RequestParam(value = staticServiceTokenName, required = false) String accessToken,
+                                                         @RequestBody MediaResourceDto mediaResourceDto) {
+        return new ResponseEntity<>(restMediaResourceFacade.addResource(mediaResourceDto), HttpStatus.CREATED);
     }
 }

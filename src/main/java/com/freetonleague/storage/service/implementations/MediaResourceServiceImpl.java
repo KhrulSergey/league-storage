@@ -2,7 +2,7 @@ package com.freetonleague.storage.service.implementations;
 
 import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.repository.MediaResourceRepository;
-import com.freetonleague.storage.security.aspect.CanManageResource;
+import com.freetonleague.storage.security.permissions.CanManageResource;
 import com.freetonleague.storage.service.MediaResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
