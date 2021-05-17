@@ -1,6 +1,8 @@
 package com.freetonleague.storage.controller;
 
 import com.freetonleague.storage.domain.dto.MediaResourceDto;
+import com.freetonleague.storage.domain.enums.ResourceFileType;
+import com.freetonleague.storage.domain.enums.ResourcePrivacyType;
 import com.freetonleague.storage.service.RestMediaResourceFacade;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -8,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(path = MediaResourceController.BASE_PATH)
@@ -47,6 +52,18 @@ public class MediaResourceController {
     @PostMapping(path = PATH_CREATE)
     public ResponseEntity<MediaResourceDto> createDocket(@RequestParam(value = staticServiceTokenName, required = false) String accessToken,
                                                          @RequestBody MediaResourceDto mediaResourceDto) {
+        return new ResponseEntity<>(restMediaResourceFacade.addResource(mediaResourceDto), HttpStatus.CREATED);
+    }
+
+    @ApiOperation("Add and save new media resource on platform (temp)")
+    @PutMapping(path = PATH_CREATE)
+    public ResponseEntity<MediaResourceDto> addResource(@RequestParam(value = "image") MultipartFile image) {
+        MediaResourceDto mediaResourceDto = MediaResourceDto.builder()
+                .multipartFile(image)
+                .resourceType(ResourceFileType.IMAGE)
+                .privacyType(ResourcePrivacyType.OPEN)
+                .creatorGUID(UUID.fromString("21a6beff-a094-a6ef-df78-a077e0693e5c"))
+                .build();
         return new ResponseEntity<>(restMediaResourceFacade.addResource(mediaResourceDto), HttpStatus.CREATED);
     }
 }

@@ -2,12 +2,22 @@ package com.freetonleague.storage.domain.enums;
 
 
 public enum ResourceFileType {
-    IMAGE,
-    DOCUMENT,
-    VIDEO,
+    IMAGE("images"),
+    DOCUMENT("documents"),
+    VIDEO("videos"),
     ;
 
-    public boolean isImage(){
+    private final String folderName;
+
+    ResourceFileType(String folderName) {
+        this.folderName = folderName;
+    }
+
+    public String getFolderName() {
+        return folderName;
+    }
+
+    public boolean isImage() {
         return this == IMAGE;
     }
 }

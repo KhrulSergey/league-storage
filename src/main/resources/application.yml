@@ -24,6 +24,13 @@ freetonleague:
   service:
     league-storage:
       service-token: EqUEcXc3#iZCu5hQS!l33O6I3
+    cloud-storage:
+      endpoint: fra1.digitaloceanspaces.com
+      key: E3GYEFC4NCVYWPEPHFCF
+      secret: m4+wj6VC4195HRp8J1+eKuvIoataE113aDGRoJCQ7ds
+      region: fra1
+      bucket: khsa
+
 
 
 #LOGGING CONFIG

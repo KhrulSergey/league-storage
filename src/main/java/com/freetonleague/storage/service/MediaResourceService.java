@@ -1,6 +1,7 @@
 package com.freetonleague.storage.service;
 
 import com.freetonleague.storage.domain.model.MediaResource;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,7 @@ public interface MediaResourceService {
      * @param mediaResource new data to add
      * @return added media resource
      */
-    MediaResource add(MediaResource mediaResource);
+    MediaResource add(MultipartFile multipartFile, MediaResource mediaResource);
 
     /**
      * Getting a media resource by Hash from the database

@@ -3,14 +3,19 @@ package com.freetonleague.storage.service.implementations;
 import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.repository.MediaResourceRepository;
 import com.freetonleague.storage.security.permissions.CanManageResource;
+import com.freetonleague.storage.service.CloudStorageService;
 import com.freetonleague.storage.service.MediaResourceService;
+import com.freetonleague.storage.util.FileTypeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -28,19 +33,38 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public class MediaResourceServiceImpl implements MediaResourceService {
 
     private final MediaResourceRepository repository;
+    private final CloudStorageService cloudStorageService;
     private final Validator validator;
 
+    private String composeCloudHashKey(MediaResource mediaResource) {
+        String folderName = FileTypeUtil.getFolderNameByFileExtension(mediaResource.getExtension());
+        return String.format("%s/%s.%s", folderName, mediaResource.getHashKey(), mediaResource.getExtension());
+    }
+
     /**
-     * Getting a media resource by Hash from the database
+     * Adding a new media resource to the database
      */
     @Override
-    public MediaResource findByHash(String hashKey) {
-        if (isBlank(hashKey)) {
-            log.error("!> requesting find media resource with findByHashAndOwner for BLANK hashKey. Check evoking clients");
+    public MediaResource add(MultipartFile multipartFile, MediaResource mediaResource) {
+        log.debug("^ trying to add new media resource {}", mediaResource);
+        String extension = FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+        String imgName = FilenameUtils.removeExtension(multipartFile.getOriginalFilename());
+
+        mediaResource.setName(imgName);
+        mediaResource.setExtension(extension);
+        mediaResource.generateHash();
+
+        try {
+            cloudStorageService.saveFile(multipartFile, this.composeCloudHashKey(mediaResource));
+        } catch (IOException exc) {
+            log.error("!> error while saving file to cloud service {}", mediaResource.getHashKey());
+        }
+
+        if (!this.verifyMediaResource(mediaResource)) {
             return null;
         }
-        log.debug("^ trying to get media resource by hash {}", hashKey);
-        return repository.findByHashKey(hashKey);
+        log.debug("^ trying to add new media resource {}", mediaResource);
+        return repository.save(mediaResource);
     }
 
     /**
@@ -72,15 +96,25 @@ public class MediaResourceServiceImpl implements MediaResourceService {
     }
 
     /**
-     * Adding a new media resource to the database
+     * Getting a media resource by Hash from the database
      */
     @Override
-    public MediaResource add(MediaResource mediaResource) {
-        if (!this.verifyMediaResource(mediaResource)) {
+    public MediaResource findByHash(String hashKey) {
+        if (isBlank(hashKey)) {
+            log.error("!> requesting find media resource with findByHashAndOwner for BLANK hashKey. Check evoking clients");
             return null;
         }
-        log.debug("^ trying to add new media resource {}", mediaResource);
-        return repository.save(mediaResource);
+        log.debug("^ trying to get media resource by hash {}", hashKey);
+        MediaResource mediaResource = repository.findByHashKey(hashKey);
+        if (isNull(mediaResource)) {
+            return null;
+        }
+        try {
+            cloudStorageService.getImage(this.composeCloudHashKey(mediaResource));
+        } catch (IOException exc) {
+            log.error("!> error while get file from cloud service {}", hashKey);
+        }
+        return mediaResource;
     }
 
     /**
