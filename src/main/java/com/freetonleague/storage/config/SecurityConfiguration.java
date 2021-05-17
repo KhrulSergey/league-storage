@@ -20,13 +20,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Value("${spring.session.token-name}")
-    private final String headerAuthTokenName = "token";
+    private static final String serviceTokenAuthority = "ADMIN";
+    @Value("${freetonleague.session.service-token-name:service_token}")
+    private String serviceTokenName;
+    @Value("${freetonleague.session.service-token:eJUsQkBw6IBRVOeTJmzh}")
+    private String serviceToken;
 
     //Initialization of request filtering component
     @Bean
     public AuthenticationCustomFilter authenticationTokenFilterBean() throws Exception {
-        AuthenticationCustomFilter authenticationTokenFilter = new AuthenticationCustomFilter();
+        AuthenticationCustomFilter authenticationTokenFilter = new AuthenticationCustomFilter(serviceTokenName,
+                serviceToken, serviceTokenAuthority);
         authenticationTokenFilter.setAuthenticationManager(authenticationManagerBean());
         return authenticationTokenFilter;
     }
