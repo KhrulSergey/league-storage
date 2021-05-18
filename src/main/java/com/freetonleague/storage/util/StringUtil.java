@@ -5,7 +5,7 @@ import org.apache.commons.text.RandomStringGenerator;
 
 public class StringUtil {
 
-    private static final int HASH_LENGTH = 64;
+    private static final int HASH_LENGTH = 48;
     private static final char MINIMUM_CODE_POINT = '0';
     private static final char MAXIMUM_CODE_POINT = 'z';
 

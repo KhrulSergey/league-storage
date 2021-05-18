@@ -40,6 +40,10 @@ public class MediaResource implements Serializable {
     @Column(name = "name")
     private String name;
 
+    @Size(max = 40)
+    @Column(name = "extension")
+    private String extension;
+
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private ResourceFileType resourceType;
@@ -79,8 +83,12 @@ public class MediaResource implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        if(isBlank(hashKey)){
-            hashKey = StringUtil.generateRandomHash();
+        if (isBlank(hashKey)) {
+            this.generateHash();
         }
+    }
+
+    public void generateHash() {
+        hashKey = StringUtil.generateRandomHash();
     }
 }

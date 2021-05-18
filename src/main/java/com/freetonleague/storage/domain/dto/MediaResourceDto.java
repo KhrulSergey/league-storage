@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -25,8 +26,13 @@ public class MediaResourceDto {
      */
     private String rawData;
 
+    private MultipartFile multipartFile;
+
     @Size(max = 200)
     private String name;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String extension;
 
     @NotNull
     private ResourceFileType resourceType;

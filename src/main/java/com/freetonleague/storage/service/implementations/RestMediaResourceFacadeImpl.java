@@ -6,7 +6,6 @@ import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.exception.ExceptionMessages;
 import com.freetonleague.storage.exception.MediaResourceManageException;
 import com.freetonleague.storage.mapper.MediaResourceMapper;
-import com.freetonleague.storage.security.permissions.CanManageResource;
 import com.freetonleague.storage.service.MediaResourceService;
 import com.freetonleague.storage.service.RestMediaResourceFacade;
 import lombok.RequiredArgsConstructor;
@@ -55,12 +54,12 @@ public class RestMediaResourceFacadeImpl implements RestMediaResourceFacade {
     /**
      * Add new resource to external service and DB.
      */
-    @CanManageResource
+//    @CanManageResource
     @Override
     public MediaResourceDto addResource(MediaResourceDto mediaResourceDto) {
         mediaResourceDto.setStatus(ResourceStatusType.ACTIVE);
         MediaResource mediaResource = this.getVerifiedMediaResourceByDto(mediaResourceDto);
-        mediaResource = mediaResourceService.add(mediaResource);
+        mediaResource = mediaResourceService.add(mediaResourceDto.getMultipartFile(), mediaResource);
 
         if (isNull(mediaResource)) {
             log.error("!> error while creating media resource from dto {}.", mediaResourceDto);
