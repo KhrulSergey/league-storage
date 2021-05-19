@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  #  !-- TO START "LEAGUE_STORAGE" PROJECT INDEPENDENT - UNCOMMENT TO START POSGTGRES SERVICE --!
+  #  postgres:
+  #    container_name: "postgres"
+  #    build:
+  #      context: ../
+  #      dockerfile: docker/db.Dockerfile
+  #    env_file:
+  #      - app-variables.env
+  #    environment:
+  #      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  #    restart: always
+  #    ports:
+  #      - "5432:5432"
+  #    networks:
+  #      - league-net
+  league-storage:
+    container_name: league-storage
+    build:
+      context: ../
+      dockerfile: docker/app.Dockerfile
+    env_file:
+      - app-variables.env
+    ports:
+      - "7702:7702"
+    networks:
+      - league-net
+    restart: always
+#    depends_on:
+#      - postgres
+#volumes:
+#  postgres: { }
+
+networks:
+  league-net:
+    driver: bridge
