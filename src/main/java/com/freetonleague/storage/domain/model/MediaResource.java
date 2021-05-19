@@ -1,19 +1,24 @@
 package com.freetonleague.storage.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.freetonleague.storage.domain.enums.ResourceFileType;
+import com.freetonleague.storage.domain.dto.MediaResourceMetaDataDto;
+import com.freetonleague.storage.domain.enums.ResourceFileExtensionType;
 import com.freetonleague.storage.domain.enums.ResourcePrivacyType;
 import com.freetonleague.storage.domain.enums.ResourceStatusType;
 import com.freetonleague.storage.util.StringUtil;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -26,6 +31,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Setter
 @Entity
 @Table(name = "media_resources")
+@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 @SequenceGenerator(name = "media_resources_id_seq", sequenceName = "media_resources_id_seq", allocationSize = 1)
 public class MediaResource implements Serializable {
 
@@ -40,13 +46,19 @@ public class MediaResource implements Serializable {
     @Column(name = "name")
     private String name;
 
-    @Size(max = 40)
-    @Column(name = "extension")
-    private String extension;
-
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ResourceFileType resourceType;
+    private ResourceFileExtensionType resourceType;
+
+    @Transient
+    private InputStream rawResourceData;
+
+    @Column(name = "size", nullable = false)
+    private Integer sizeInBytes;
+
+    @Type(type = "jsonb")
+    @Column(name = "meta_data", columnDefinition = "jsonb")
+    private MediaResourceMetaDataDto resourceMetaData;
 
     /**
      * Hash unique identifier of resource

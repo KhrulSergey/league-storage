@@ -1,15 +1,12 @@
 package com.freetonleague.storage.service;
 
-import org.springframework.web.multipart.MultipartFile;
+import com.freetonleague.storage.domain.model.MediaResource;
 
-import java.io.IOException;
+import java.io.InputStream;
 
 public interface CloudStorageService {
 
-	void saveFile(MultipartFile multipartFile, String key) throws IOException;
+	void saveCloudResource(MediaResource mediaResource);
 
-//	void deleteFile(Long id) throws Exception;
-
-
-	MultipartFile getImage(String key) throws IOException;
+	InputStream getCloudResource(MediaResource mediaResource);
 }

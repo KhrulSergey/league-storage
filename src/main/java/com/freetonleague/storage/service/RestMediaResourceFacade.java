@@ -1,6 +1,7 @@
 package com.freetonleague.storage.service;
 
 import com.freetonleague.storage.domain.dto.MediaResourceDto;
+import com.freetonleague.storage.domain.model.MediaResource;
 
 /**
  * Service-facade for managing media resources
@@ -17,15 +18,23 @@ public interface RestMediaResourceFacade {
     MediaResourceDto getMediaResourceByHashAndOwnerGUID(String hash, String ownerGUID);
 
     /**
-     * Returns founded media resource by hash (for micro service)
+     * Returns raw file if media resource by hash
+     *
+     * @param hash of media resource to search
+     * @return inputStream of resource file
+     */
+    MediaResource getMediaResourceByHash(String hash);
+
+    /**
+     * Returns founded media resource by hash
      *
      * @param hash of media resource to search
      * @return media resource entity
      */
-    MediaResourceDto getMediaResourceByHash(String hash);
+    MediaResourceDto getMediaResourceInfoByHash(String hash);
 
     /**
-     * Add new resource to external service and DB.
+     * Add new resource to external service and DB.  (for micro service)
      *
      * @param mediaResource to be added
      * @return Added media resource

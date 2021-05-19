@@ -2,16 +2,16 @@ package com.freetonleague.storage.service.implementations;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
+import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.service.CloudStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
+
+import static java.util.Objects.isNull;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,6 +22,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     @Value("${freetonleague.service.cloud-storage.bucket}")
     private String cloudSpaceBucket;
 
+    //TODO remove deleting method until 01/09/2021 if no need
 //	@Override
 //	public void deleteFile(Long fileId) throws Exception {
 //		Optional<Image> imageOpt = imageRepo.findById(fileId);
@@ -34,26 +35,36 @@ public class CloudStorageServiceImpl implements CloudStorageService {
 //	}
 
     @Override
-    public void saveFile(MultipartFile multipartFile, String key) throws IOException {
-        log.debug("^ trying to save file {} to cloud storage", multipartFile.getName());
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(multipartFile.getInputStream().available());
-        if (multipartFile.getContentType() != null && !"".equals(multipartFile.getContentType())) {
-            metadata.setContentType(multipartFile.getContentType());
+    public void saveCloudResource(MediaResource mediaResource) {
+        log.debug("^ trying to save file with hash {} to cloud storage", mediaResource.getHashKey());
+        if (isNull(mediaResource.getRawResourceData())) {
+            log.error("!> requesting find media resource with findByHashAndOwner for BLANK hashKey. Check evoking clients");
+            return;
+
         }
-        PutObjectResult putObjectResult = cloudStorageClient.putObject(new PutObjectRequest(cloudSpaceBucket, key, multipartFile.getInputStream(), metadata)
-                .withCannedAcl(CannedAccessControlList.PublicRead));
-        log.debug("^ successfully saved file {} to cloud storage {}", multipartFile.getName(), putObjectResult.getVersionId());
+        String cloudKey = this.composeCloudHashKey(mediaResource);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(mediaResource.getSizeInBytes());
+        metadata.setContentType(mediaResource.getResourceType().getHttpExtension());
+
+        PutObjectResult putObjectResult = cloudStorageClient.putObject(
+                new PutObjectRequest(cloudSpaceBucket, cloudKey, mediaResource.getRawResourceData(), metadata)
+                        .withCannedAcl(CannedAccessControlList.Private));
+        log.debug("^ successfully saved file {} to cloud storage {}", cloudKey, putObjectResult.getVersionId());
     }
 
     @Override
-    public MultipartFile getImage(String key) throws IOException {
-        log.debug("^ trying to get file with key {} from cloud storage", key);
-        S3Object s3object = cloudStorageClient.getObject(cloudSpaceBucket, key);
-        S3ObjectInputStream inputStream = s3object.getObjectContent();
-        FileUtils.copyInputStreamToFile(inputStream,
-                new File("/Users/Khsa/Documents/FreeTonLeague/file.jpg"));
+    public InputStream getCloudResource(MediaResource mediaResource) {
+        log.debug("^ trying to get file with hash {} from cloud storage", mediaResource.getHashKey());
+        String cloudKey = this.composeCloudHashKey(mediaResource);
+        S3Object s3object = cloudStorageClient.getObject(cloudSpaceBucket, cloudKey);
         log.debug("^ successfully get file {} from cloud storage", s3object);
-        return null;
+        return s3object.getObjectContent();
+    }
+
+    private String composeCloudHashKey(MediaResource mediaResource) {
+        String folderName = mediaResource.getResourceType().getFileType().getFolderName();
+        String extension = mediaResource.getResourceType().getExtension();
+        return String.format("%s/%s.%s", folderName, mediaResource.getHashKey(), extension);
     }
 }
