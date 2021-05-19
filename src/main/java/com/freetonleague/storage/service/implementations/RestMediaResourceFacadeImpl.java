@@ -1,23 +1,32 @@
 package com.freetonleague.storage.service.implementations;
 
 import com.freetonleague.storage.domain.dto.MediaResourceDto;
+import com.freetonleague.storage.domain.dto.MediaResourceMetaDataDto;
+import com.freetonleague.storage.domain.enums.ResourceFileExtensionType;
 import com.freetonleague.storage.domain.enums.ResourceStatusType;
 import com.freetonleague.storage.domain.model.MediaResource;
 import com.freetonleague.storage.exception.ExceptionMessages;
 import com.freetonleague.storage.exception.MediaResourceManageException;
 import com.freetonleague.storage.mapper.MediaResourceMapper;
+import com.freetonleague.storage.security.permissions.CanManageResource;
 import com.freetonleague.storage.service.MediaResourceService;
 import com.freetonleague.storage.service.RestMediaResourceFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.Set;
 
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,22 +53,79 @@ public class RestMediaResourceFacadeImpl implements RestMediaResourceFacade {
     }
 
     /**
-     * Returns founded media resource by hash (for micro service)
+     * Returns raw file of media resource by hash
      */
     @Override
-    public MediaResourceDto getMediaResourceByHash(String hash) {
+    public MediaResource getMediaResourceByHash(String hash) {
+        return this.getVerifiedMediaResourceByHash(hash);
+    }
+
+    /**
+     * Returns founded media resource by hash
+     */
+    @Override
+    public MediaResourceDto getMediaResourceInfoByHash(String hash) {
         return mediaResourceMapper.toDto(this.getVerifiedMediaResourceByHash(hash));
     }
 
     /**
      * Add new resource to external service and DB.
      */
-//    @CanManageResource
+    @CanManageResource
     @Override
     public MediaResourceDto addResource(MediaResourceDto mediaResourceDto) {
+        // Parse raw data #"data:image/png;base64,abcdefghijklmnopqrstuvwxyz0123456789"
+        String[] rawImageWithMetadata = mediaResourceDto.getRawData().split(",");
+
+        if (isEmpty(rawImageWithMetadata)) {
+            log.warn("~ raw image data is not valid");
+            throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_CREATION_ERROR,
+                    "raw image data is not valid");
+        }
+
+        //decode the extension of raw data
+        ResourceFileExtensionType resourceFileExtensionType = ResourceFileExtensionType
+                .fromHttpExtension(rawImageWithMetadata[0]);
+        if (isNull(resourceFileExtensionType)) {
+            log.warn("~ file extension is not recognized");
+            throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_CREATION_ERROR,
+                    "file extension is not recognized");
+        }
+
+        // decode the content of raw data
+        byte[] decodedBytes = Base64
+                .getDecoder()
+                .decode(rawImageWithMetadata[1]);
+
+        MediaResourceMetaDataDto mediaResourceMetaDataDto = new MediaResourceMetaDataDto();
+        // parse metadata from image
+        if (resourceFileExtensionType.getFileType().isImage()) {
+            try (ByteArrayInputStream stream = new ByteArrayInputStream(decodedBytes)) {
+                BufferedImage image = ImageIO.read(stream);
+                if (isNull(image)) {//If image=null means that the upload is not an image format
+                    throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_CREATION_ERROR,
+                            "file content is not match specified extension");
+                }
+                mediaResourceMetaDataDto.setWidth(image.getWidth());
+                mediaResourceMetaDataDto.setHeight(image.getHeight());
+                mediaResourceMetaDataDto.setDimension(String.format("%sx%s", image.getWidth(), image.getHeight()));
+                mediaResourceMetaDataDto.setBitDepth(image.getColorModel().getPixelSize());
+            } catch (IOException e) {
+                log.debug("!!> error while convert to file");
+                throw new MediaResourceManageException(ExceptionMessages.MEDIA_RESOURCE_CREATION_ERROR,
+                        "Error while convert base64 string to file");
+            }
+        }
+        //set protected properties from decoded file
         mediaResourceDto.setStatus(ResourceStatusType.ACTIVE);
+        mediaResourceDto.setResourceType(resourceFileExtensionType);
+        mediaResourceDto.setSizeInBytes(decodedBytes.length);
+        mediaResourceDto.setResourceMetaData(mediaResourceMetaDataDto);
+
         MediaResource mediaResource = this.getVerifiedMediaResourceByDto(mediaResourceDto);
-        mediaResource = mediaResourceService.add(mediaResourceDto.getMultipartFile(), mediaResource);
+        mediaResource.setRawResourceData(new ByteArrayInputStream(decodedBytes));
+
+        mediaResource = mediaResourceService.add(mediaResource);
 
         if (isNull(mediaResource)) {
             log.error("!> error while creating media resource from dto {}.", mediaResourceDto);
@@ -96,8 +162,15 @@ public class RestMediaResourceFacadeImpl implements RestMediaResourceFacade {
         // Verify MediaResource information
         Set<ConstraintViolation<MediaResourceDto>> violations = validator.validate(mediaResourceDto);
         if (!violations.isEmpty()) {
-            log.debug("^ transmitted MediaResourceDto : {} have constraint violations: {}", mediaResourceDto, violations);
+            log.debug("^ transmitted MediaResourceDto.name:{}, hash {} have constraint violations: {}",
+                    mediaResourceDto.getName(), mediaResourceDto.getHashKey(), violations);
             throw new ConstraintViolationException(violations);
+        }
+        Set<ConstraintViolation<MediaResourceMetaDataDto>> violationsMetaData = validator.validate(mediaResourceDto.getResourceMetaData());
+        if (!violationsMetaData.isEmpty()) {
+            log.debug("^ transmitted MetaData {} of MediaResourceDto.name: {} have constraint violations: {}",
+                    mediaResourceDto.getResourceMetaData(), mediaResourceDto.getName(), violationsMetaData);
+            throw new ConstraintViolationException(violationsMetaData);
         }
         return mediaResourceMapper.fromDto(mediaResourceDto);
     }

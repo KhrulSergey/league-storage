@@ -21,7 +21,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private static final String serviceTokenAuthority = "ADMIN";
     @Value("${freetonleague.session.service-token-name:service_token}")
     private String serviceTokenName;
-    @Value("${freetonleague.session.service-token:eJUsQkBw6IBRVOeTJmzh}")
+    @Value("${freetonleague.service.league-storage.service-token:eJUsQkBw6IBRVOeTJmzh}")
     private String serviceToken;
 
     //Initialization of request filtering component

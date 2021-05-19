@@ -2,34 +2,49 @@ package com.freetonleague.storage.domain.enums;
 
 public enum ResourceFileExtensionType {
 
-    JPEG("jpeg", ResourceFileType.IMAGE),
-    JPG("jpg", ResourceFileType.IMAGE),
-    PNG("png", ResourceFileType.IMAGE),
-    BMP("bmp", ResourceFileType.IMAGE),
+    JPEG("jpeg", "image/jpeg", ResourceFileType.IMAGE),
+    JPG("jpg", "image/jpg", ResourceFileType.IMAGE),
+    PNG("png", "image/png", ResourceFileType.IMAGE),
+    BMP("bmp", "image/bmp", ResourceFileType.IMAGE),
     ;
 
-    private final String value;
+    private final String extension;
+    private final String httpExtension;
     private final ResourceFileType fileType;
 
-    ResourceFileExtensionType(String value, ResourceFileType fileType) {
-        this.value = value;
+    ResourceFileExtensionType(String extension, String httpExtension, ResourceFileType fileType) {
+        this.extension = extension;
+        this.httpExtension = httpExtension;
         this.fileType = fileType;
     }
 
-    public static ResourceFileExtensionType fromString(String text) {
+    public static ResourceFileExtensionType fromExtension(String extension) {
         for (ResourceFileExtensionType b : ResourceFileExtensionType.values()) {
-            if (b.value.equalsIgnoreCase(text)) {
+            if (b.extension.equalsIgnoreCase(extension)) {
                 return b;
             }
         }
         return null;
     }
 
-    public String getValue() {
-        return value;
+    public static ResourceFileExtensionType fromHttpExtension(String httpExtension) {
+        for (ResourceFileExtensionType b : ResourceFileExtensionType.values()) {
+            if (httpExtension.contains(b.httpExtension)) {
+                return b;
+            }
+        }
+        return null;
+    }
+
+    public String getExtension() {
+        return extension;
     }
 
     public ResourceFileType getFileType() {
         return fileType;
+    }
+
+    public String getHttpExtension() {
+        return httpExtension;
     }
 }

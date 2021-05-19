@@ -2,15 +2,17 @@ package com.freetonleague.storage.domain.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.freetonleague.storage.domain.enums.ResourceFileType;
+import com.freetonleague.storage.domain.enums.ResourceFileExtensionType;
 import com.freetonleague.storage.domain.enums.ResourcePrivacyType;
 import com.freetonleague.storage.domain.enums.ResourceStatusType;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -24,26 +26,38 @@ public class MediaResourceDto {
     /**
      * Not null for adding resource
      */
+    @ApiModelProperty(required = true)
+    @NotNull
     private String rawData;
 
-    private MultipartFile multipartFile;
-
-    @Size(max = 200)
-    private String name;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String extension;
-
-    @NotNull
-    private ResourceFileType resourceType;
-
+    @ApiModelProperty(readOnly = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String hashKey;
 
+    @ApiModelProperty(required = true)
+    @Size(max = 200)
+    private String name;
+
+    @ApiModelProperty(readOnly = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private ResourceFileExtensionType resourceType;
+
+    @ApiModelProperty(readOnly = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Min(0)
+    @Max(5242880) //5Mb
+    private Integer sizeInBytes;
+
+    @ApiModelProperty(readOnly = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private MediaResourceMetaDataDto resourceMetaData;
+
     @Builder.Default
+    @ApiModelProperty(readOnly = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private ResourceStatusType status = ResourceStatusType.ACTIVE;
 
+    @ApiModelProperty(required = true)
     @NotNull
     private ResourcePrivacyType privacyType;
 
@@ -53,12 +67,19 @@ public class MediaResourceDto {
      */
     private UUID privacyOwnerGUID;
 
+    @ApiModelProperty(required = true)
     @NotNull
     private UUID creatorGUID;
 
+    @ApiModelProperty(readOnly = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createdAt;
 
+    @ApiModelProperty(readOnly = true)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime updatedAt;
+
+    public String getExtension() {
+        return resourceType.getExtension();
+    }
 }
