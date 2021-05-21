@@ -6,7 +6,7 @@ RUN gradle assemble --no-daemon
 
 # Running stage
 FROM openjdk:11.0.6-jre-buster
-#EXPOSE 7702
+EXPOSE 7702
 RUN mkdir /app
 
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/league-storage.jar
